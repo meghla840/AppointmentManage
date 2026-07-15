@@ -341,6 +341,78 @@
 
   .sun-moon{transition:transform .4s ease;}
   .icon-btn:active .sun-moon{transform:rotate(25deg);}
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 900px){
+    main{padding:22px 16px 70px;}
+    .submit-grid{gap:18px;}
+  }
+
+  @media (max-width: 720px){
+    header{padding:12px 16px; gap:10px;}
+    .logo{font-size:19px;}
+    .logo .cloud-mini{font-size:22px;}
+    .header-right{gap:8px;}
+    nav.tabs{gap:2px; padding:4px;}
+    nav.tabs button{padding:8px 12px; font-size:12.5px;}
+    .icon-btn{width:38px; height:38px; font-size:16px;}
+    .dropdown-panel{width:min(88vw, 320px); right:-6px;}
+
+    .welcome-hero{padding:34px 8px 20px;}
+    .mascot-wrap{width:140px; height:120px;}
+    .mascot{width:140px;}
+    .welcome-hero h1{font-size:28px;}
+    .welcome-hero p.tagline{font-size:14.5px;}
+    .cta-row{gap:10px;}
+    .btn{padding:12px 20px; font-size:13.5px; width:100%; justify-content:center;}
+    .cta-row{flex-direction:column; align-items:stretch;}
+    .feature-grid{margin-top:38px; gap:14px;}
+
+    .section-head h2{font-size:21px;}
+    .stats{grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:20px;}
+    .stat-card{padding:12px 14px;}
+    .stat-card .num{font-size:21px;}
+
+    .toolbar{gap:8px;}
+    .search-box{min-width:0; width:100%;}
+    .filter-chip{padding:7px 12px; font-size:12px;}
+
+    .card{padding:18px;}
+    textarea{min-height:200px; font-size:13px;}
+  }
+
+  @media (max-width: 620px){
+    /* Card-style table for small screens */
+    .table-wrap{background:transparent; box-shadow:none; border:none; overflow:visible;}
+    table, thead, tbody, tr, td{display:block; width:100%;}
+    thead{display:none;}
+    tbody tr{
+      background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow-soft);
+      border:1px solid var(--border-soft); margin-bottom:12px; padding:6px 4px; border-left:5px solid var(--pink-deep);
+    }
+    tbody tr.overdue{border-left-color:var(--red-soft); background:linear-gradient(135deg, var(--red-bg), var(--surface));}
+    tbody tr:not(:last-child){border-bottom:1px solid var(--border-soft);}
+    tbody td{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 14px; border-bottom:1px dashed var(--border-soft); text-align:right;
+    }
+    tbody td:last-child{border-bottom:none;}
+    tbody td::before{
+      content:attr(data-label); font-weight:700; font-size:11.5px; letter-spacing:.3px;
+      text-transform:uppercase; color:var(--text-mid); text-align:left; flex-shrink:0;
+    }
+    tbody td[data-label=""]{justify-content:flex-end;}
+    tbody td[data-label=""]::before{content:none;}
+    .name-cell{align-items:flex-end;}
+    .approve-group{justify-content:flex-end;}
+  }
+
+  @media (max-width: 420px){
+    .stats{grid-template-columns:1fr 1fr;}
+    .welcome-hero h1{font-size:24px;}
+    nav.tabs button .tab-label{display:none;}
+    nav.tabs button{padding:9px 11px; font-size:16px;}
+  }
 </style>
 </head>
 <body>
@@ -356,8 +428,8 @@
 
   <div class="header-right">
     <nav class="tabs">
-      <button data-page="list" onclick="goPage('list')">📋 Appointment List</button>
-      <button data-page="submit" onclick="goPage('submit')">✍️ Appointment Submit</button>
+      <button data-page="list" onclick="goPage('list')">📋 <span class="tab-label">Appointment List</span></button>
+      <button data-page="submit" onclick="goPage('submit')">✍️ <span class="tab-label">Appointment Submit</span></button>
     </nav>
 
     <div class="dropdown-wrap">
@@ -776,23 +848,23 @@ function renderTable(){
     const badgeClass = st === 'past' ? 'past' : (st === 'today' ? 'today' : '');
     return `
       <tr class="${overdue ? 'overdue' : ''}" style="animation-delay:${idx*0.03}s">
-        <td>
+        <td data-label="Client">
           <div class="name-cell">
             <span class="nm">${escapeHtml(a.name)}</span>
             <span class="type-tag">${escapeHtml(a.type)}</span>
           </div>
         </td>
-        <td>${escapeHtml(a.phone)}</td>
-        <td><span class="date-badge ${badgeClass}">🗓️ ${formatDate(a.date)}</span></td>
-        <td>${a.time ? '⏰ ' + escapeHtml(formatTime(a.time)) : '—'}</td>
-        <td>${a.profile ? `<a class="profile-link" href="${escapeHtml(a.profile)}" target="_blank" rel="noopener" title="View profile">🔗</a>` : '—'}</td>
-        <td>
+        <td data-label="Phone">${escapeHtml(a.phone)}</td>
+        <td data-label="Date"><span class="date-badge ${badgeClass}">🗓️ ${formatDate(a.date)}</span></td>
+        <td data-label="Time">${a.time ? '⏰ ' + escapeHtml(formatTime(a.time)) : '—'}</td>
+        <td data-label="Profile">${a.profile ? `<a class="profile-link" href="${escapeHtml(a.profile)}" target="_blank" rel="noopener" title="View profile">🔗</a>` : '—'}</td>
+        <td data-label="Approve">
           <div class="approve-group">
             <button class="approve-btn yes ${a.approve==='yes'?'on':''}" onclick="setApprove('${a.id}','yes')">Yes</button>
             <button class="approve-btn no ${a.approve==='no'?'on':''}" onclick="setApprove('${a.id}','no')">No</button>
           </div>
         </td>
-        <td><button class="del-btn" onclick="deleteApt('${a.id}')" title="Delete">✕</button></td>
+        <td data-label=""><button class="del-btn" onclick="deleteApt('${a.id}')" title="Delete">✕</button></td>
       </tr>
     `;
   }).join('');
