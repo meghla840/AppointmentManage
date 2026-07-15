@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meghla · Appointment Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1: #fff3f7;
+    --bg-2: #fdeef8;
+    --pink-bg: #fff0f6;
+    --pink: #ffc2d6;
+    --pink-deep: #ff8fab;
+    --purple: #d9c2f7;
+    --purple-deep: #a97fe0;
+    --lilac: #f1e6ff;
+    --red-soft: #ff6b7a;
+    --red-bg: #ffe3e6;
+    --green-soft: #3fbf87;
+    --green-bg: #e3f9ef;
+    --amber-soft: #e2951f;
+    --amber-bg: #fff2df;
+    --text-deep: #4a2e4f;
+    --text-mid: #7c5b82;
+    --surface: #ffffff;
+    --header-surface: rgba(255,255,255,0.72);
+    --border-soft: rgba(255,180,200,0.35);
+    --shadow: 0 10px 30px rgba(184, 118, 165, 0.14);
+    --shadow-soft: 0 4px 14px rgba(184, 118, 165, 0.12);
+    --radius-lg: 28px;
+    --radius-md: 18px;
+    --radius-sm: 12px;
+    --scrollbar: var(--pink);
+  }
+
+  html[data-theme="dark"]{
+    --bg-1: #171019;
+    --bg-2: #1d1420;
+    --pink-bg: rgba(255,143,171,0.10);
+    --pink: #ff9fc0;
+    --pink-deep: #ff85a8;
+    --purple: #c7a4f2;
+    --purple-deep: #b48af0;
+    --lilac: rgba(201,166,245,0.12);
+    --red-soft: #ff7885;
+    --red-bg: rgba(255,107,122,0.16);
+    --green-soft: #4fd39c;
+    --green-bg: rgba(63,191,135,0.16);
+    --amber-soft: #f0ac3f;
+    --amber-bg: rgba(226,149,31,0.18);
+    --text-deep: #f7ecf3;
+    --text-mid: #c6aecd;
+    --surface: #241a29;
+    --header-surface: rgba(23,16,25,0.72);
+    --border-soft: rgba(201,166,245,0.22);
+    --shadow: 0 10px 30px rgba(0,0,0,0.42);
+    --shadow-soft: 0 4px 16px rgba(0,0,0,0.32);
+    --scrollbar: var(--purple-deep);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Quicksand','Outfit',sans-serif;
+    background:
+      radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--bg-1) 60%, transparent) 0%, transparent 45%),
+      radial-gradient(circle at 90% 0%, var(--lilac) 0%, transparent 40%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color:var(--text-deep);
+    min-height:100vh;
+    overflow-x:hidden;
+    transition:background .4s ease, color .4s ease;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2','Quicksand',sans-serif;}
+  ::selection{background:var(--pink); color:var(--text-deep);}
+
+  /* ---------- Background ambient blobs ---------- */
+  .blob{position:fixed; border-radius:50%; filter:blur(50px); opacity:.4; z-index:0; pointer-events:none; transition:opacity .4s ease;}
+  html[data-theme="dark"] .blob{opacity:.22;}
+  .blob1{width:340px;height:340px; background:var(--pink); top:-100px; left:-100px; animation:drift1 18s ease-in-out infinite;}
+  .blob2{width:280px;height:280px; background:var(--purple); bottom:-80px; right:-60px; animation:drift2 22s ease-in-out infinite;}
+  .blob3{width:220px;height:220px; background:var(--pink-bg); top:40%; right:-90px; animation:drift1 16s ease-in-out infinite reverse;}
+  @keyframes drift1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,40px) scale(1.08);}}
+  @keyframes drift2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-25px,-30px) scale(1.1);}}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 28px;
+    background:var(--header-surface);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border-soft);
+    flex-wrap:wrap;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Baloo 2'; font-weight:800; font-size:22px; color:var(--text-deep);
+    cursor:pointer; user-select:none;
+  }
+  .logo .cloud-mini{font-size:26px; display:inline-block; animation:bob 3.2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-5px) rotate(3deg);}}
+
+  .header-right{display:flex; align-items:center; gap:12px;}
+
+  nav.tabs{display:flex; gap:6px; background:var(--surface); padding:5px; border-radius:999px; box-shadow:var(--shadow-soft);}
+  nav.tabs button{
+    border:none; background:transparent; padding:9px 16px; border-radius:999px;
+    font-family:'Quicksand'; font-weight:700; font-size:14px; color:var(--text-mid);
+    cursor:pointer; transition:.25s ease; white-space:nowrap;
+  }
+  nav.tabs button.active{
+    background:linear-gradient(135deg, var(--pink-deep), var(--purple-deep));
+    color:#fff; box-shadow:0 6px 14px rgba(169,127,224,0.35);
+  }
+  nav.tabs button:not(.active):hover{background:var(--pink-bg); color:var(--text-deep);}
+
+  .icon-btn{
+    position:relative; width:42px; height:42px; border-radius:50%; border:none;
+    background:var(--surface); box-shadow:var(--shadow-soft); cursor:pointer;
+    font-size:18px; display:flex; align-items:center; justify-content:center;
+    transition:.25s ease; color:var(--text-deep);
+  }
+  .icon-btn:hover{transform:translateY(-2px) scale(1.05);}
+  .badge-dot{
+    position:absolute; top:2px; right:2px; min-width:16px; height:16px; padding:0 4px;
+    background:var(--red-soft); color:#fff; border-radius:999px; font-size:10px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--surface);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+
+  .dropdown-panel{
+    position:absolute; top:56px; right:0; width:340px; max-height:420px; overflow-y:auto;
+    background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow);
+    border:1px solid var(--border-soft); padding:10px; z-index:80;
+    opacity:0; visibility:hidden; transform:translateY(-8px); transition:.22s ease;
+  }
+  .dropdown-panel.open{opacity:1; visibility:visible; transform:translateY(0);}
+  .dropdown-wrap{position:relative;}
+  .dropdown-head{display:flex; align-items:center; justify-content:space-between; padding:8px 10px 12px; border-bottom:1px solid var(--border-soft); margin-bottom:8px;}
+  .dropdown-head h4{margin:0; font-size:14.5px; font-family:'Baloo 2';}
+  .dropdown-head button{border:none; background:none; color:var(--purple-deep); font-weight:700; font-size:12px; cursor:pointer;}
+  .notif-item{
+    display:flex; gap:10px; padding:10px; border-radius:var(--radius-sm); cursor:pointer; transition:.2s;
+  }
+  .notif-item:hover{background:var(--pink-bg);}
+  .notif-item .ni-icon{font-size:18px; flex-shrink:0;}
+  .notif-item .ni-title{font-size:13px; font-weight:700; color:var(--text-deep);}
+  .notif-item .ni-sub{font-size:11.5px; color:var(--text-mid); margin-top:2px;}
+  .notif-empty{padding:26px 10px; text-align:center; color:var(--text-mid); font-size:13px;}
+  .notif-cta{
+    margin-top:6px; width:100%; padding:9px; border-radius:var(--radius-sm); border:1.5px dashed var(--purple);
+    background:none; color:var(--purple-deep); font-weight:700; font-size:12px; cursor:pointer;
+  }
+
+  main{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:28px 20px 80px;}
+  .page{display:none; animation:fadeUp .5s ease both;}
+  .page.active{display:block;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- Welcome page ---------- */
+  .welcome-hero{ text-align:center; padding:50px 20px 30px; position:relative; }
+  .mascot-wrap{position:relative; width:180px; height:150px; margin:0 auto 6px;}
+  .mascot{ width:180px; height:auto; animation:float 3.6s ease-in-out infinite;
+    filter:drop-shadow(0 18px 24px rgba(184,118,165,0.28)); }
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+  .sparkle{position:absolute; font-size:20px; animation:twinkle 2.4s ease-in-out infinite;}
+  .s1{top:5px; left:8px; animation-delay:.2s;}
+  .s2{top:20px; right:0px; animation-delay:.9s;}
+  .s3{bottom:30px; left:-10px; animation-delay:1.4s; font-size:14px;}
+  .s4{bottom:10px; right:14px; animation-delay:.5s; font-size:16px;}
+  @keyframes twinkle{0%,100%{opacity:.3; transform:scale(.7) rotate(0deg);}50%{opacity:1; transform:scale(1.15) rotate(15deg);}}
+
+  .welcome-hero h1{font-size:38px; margin:12px 0 6px; color:var(--text-deep);}
+  .welcome-hero h1 span{
+    background:linear-gradient(135deg, var(--pink-deep), var(--purple-deep));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .welcome-hero p.tagline{font-size:16.5px; color:var(--text-mid); max-width:500px; margin:0 auto 4px; line-height:1.6;}
+  .welcome-hero p.sub{font-size:13px; color:var(--purple-deep); letter-spacing:.5px; text-transform:uppercase; font-weight:700; margin-top:10px;}
+
+  .cta-row{display:flex; gap:14px; justify-content:center; margin-top:30px; flex-wrap:wrap;}
+  .btn{
+    border:none; cursor:pointer; font-family:'Quicksand'; font-weight:700; font-size:15px;
+    padding:14px 26px; border-radius:999px; transition:.25s ease; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg, var(--pink-deep), var(--purple-deep)); color:#fff;
+    box-shadow:0 10px 20px rgba(169,127,224,0.34);
+  }
+  .btn-primary:hover{transform:translateY(-3px); box-shadow:0 14px 26px rgba(169,127,224,0.42);}
+  .btn-ghost{background:var(--surface); color:var(--text-deep); box-shadow:var(--shadow-soft); border:1.5px solid var(--pink);}
+  .btn-ghost:hover{background:var(--pink-bg); transform:translateY(-3px);}
+  .btn-danger-ghost{background:var(--surface); color:var(--red-soft); box-shadow:var(--shadow-soft); border:1.5px solid var(--red-soft);}
+  .btn-danger-ghost:hover{background:var(--red-bg);}
+
+  .feature-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:56px;}
+  .feature-card{
+    background:var(--surface); border-radius:var(--radius-md); padding:22px 20px;
+    box-shadow:var(--shadow-soft); text-align:left; position:relative; overflow:hidden;
+    transition:.3s ease; border:1px solid var(--border-soft);
+  }
+  .feature-card:hover{transform:translateY(-6px); box-shadow:var(--shadow);}
+  .feature-card .emoji{font-size:26px; display:inline-block; margin-bottom:10px;}
+  .feature-card h3{font-size:16.5px; margin:0 0 6px;}
+  .feature-card p{font-size:13.5px; color:var(--text-mid); line-height:1.5; margin:0;}
+  .feature-card::after{
+    content:''; position:absolute; width:70px; height:70px; border-radius:50%;
+    background:var(--pink-bg); top:-30px; right:-30px; z-index:-1;
+  }
+  @media (max-width:720px){ .feature-grid{grid-template-columns:1fr;} }
+
+  /* ---------- Section headers ---------- */
+  .section-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap;}
+  .section-head h2{font-size:26px; margin:0 0 4px;}
+  .section-head p{margin:0; color:var(--text-mid); font-size:14px;}
+
+  /* ---------- Stats ---------- */
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px;}
+  .stat-card{
+    background:var(--surface); border-radius:var(--radius-sm); padding:16px 18px; box-shadow:var(--shadow-soft);
+    border-left:5px solid var(--pink-deep); border-top:1px solid var(--border-soft); border-right:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);
+  }
+  .stat-card.amber{border-left-color:var(--amber-soft);}
+  .stat-card.green{border-left-color:var(--green-soft);}
+  .stat-card.red{border-left-color:var(--red-soft);}
+  .stat-card .num{font-family:'Baloo 2'; font-size:26px; font-weight:700; line-height:1;}
+  .stat-card .lbl{font-size:11.5px; color:var(--text-mid); margin-top:6px; font-weight:700; letter-spacing:.3px;}
+  @media (max-width:720px){ .stats{grid-template-columns:repeat(2,1fr);} }
+
+  /* ---------- Table ---------- */
+  .toolbar{display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;}
+  .search-box{
+    flex:1; min-width:200px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border-radius:999px; padding:10px 16px; box-shadow:var(--shadow-soft);
+    border:1.5px solid transparent;
+  }
+  .search-box:focus-within{border-color:var(--pink-deep);}
+  .search-box input{border:none; outline:none; font-family:'Quicksand'; font-size:14px; width:100%; background:transparent; color:var(--text-deep);}
+  .filter-chip{
+    border:1.5px solid var(--pink); background:var(--surface); border-radius:999px; padding:9px 15px;
+    font-size:13px; font-weight:700; color:var(--text-mid); cursor:pointer; transition:.2s;
+  }
+  .filter-chip.active{background:linear-gradient(135deg, var(--pink-deep), var(--purple-deep)); color:#fff; border-color:transparent;}
+
+  .table-wrap{background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow); overflow:hidden; border:1px solid var(--border-soft);}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  thead th{
+    text-align:left; padding:15px 16px; background:var(--lilac); color:var(--text-deep);
+    font-family:'Baloo 2'; font-weight:600; font-size:12.5px; letter-spacing:.4px;
+    text-transform:uppercase; position:sticky; top:0;
+  }
+  tbody tr{transition:background .25s ease; animation:rowIn .4s ease both;}
+  @keyframes rowIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  tbody tr:not(:last-child){border-bottom:1px solid var(--border-soft);}
+  tbody td{padding:14px 16px; vertical-align:middle; color:var(--text-deep);}
+  tbody tr.overdue{background:linear-gradient(90deg, var(--red-bg), transparent);}
+  tbody tr:hover{background:var(--pink-bg);}
+  .name-cell{display:flex; flex-direction:column;}
+  .name-cell .nm{font-weight:700;}
+  .name-cell .type-tag{font-size:11.5px; color:var(--purple-deep); font-weight:600; margin-top:2px;}
+  .date-badge{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+    font-weight:700; font-size:12px; background:var(--amber-bg); color:var(--amber-soft);
+  }
+  .date-badge.past{background:var(--red-bg); color:var(--red-soft);}
+  .date-badge.today{background:var(--green-bg); color:var(--green-soft);}
+  .profile-link{
+    display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px;
+    border-radius:50%; background:var(--pink-bg); color:var(--pink-deep); text-decoration:none;
+    font-size:15px; transition:.2s;
+  }
+  .profile-link:hover{background:var(--pink-deep); color:#fff; transform:scale(1.08);}
+  .approve-group{display:flex; gap:6px;}
+  .approve-btn{
+    border:none; cursor:pointer; padding:7px 13px; border-radius:999px; font-weight:700; font-size:12.5px;
+    background:var(--pink-bg); color:var(--text-mid); transition:.2s;
+  }
+  .approve-btn.yes.on{background:var(--green-soft); color:#fff; box-shadow:0 4px 10px rgba(69,201,139,.35);}
+  .approve-btn.no.on{background:var(--red-soft); color:#fff; box-shadow:0 4px 10px rgba(255,107,122,.35);}
+  .approve-btn:hover{transform:translateY(-2px);}
+  .del-btn{
+    border:none; background:transparent; color:var(--text-mid); opacity:.6; cursor:pointer; font-size:17px;
+    width:32px; height:32px; border-radius:50%; transition:.2s;
+  }
+  .del-btn:hover{background:var(--red-bg); color:var(--red-soft); opacity:1;}
+
+  .empty-state{text-align:center; padding:60px 20px; color:var(--text-mid);}
+  .empty-state .emoji{font-size:48px; display:block; margin-bottom:14px; animation:float 3s ease-in-out infinite;}
+  .empty-state h3{margin:0 0 6px; color:var(--text-deep);}
+
+  /* ---------- Submit page ---------- */
+  .submit-grid{display:grid; grid-template-columns:1.15fr .85fr; gap:24px; align-items:start;}
+  @media (max-width:840px){ .submit-grid{grid-template-columns:1fr;} }
+  .card{background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow); padding:24px; border:1px solid var(--border-soft);}
+  .card h3{margin:0 0 6px; font-size:18px; display:flex; align-items:center; gap:8px;}
+  .card p.hint{margin:0 0 16px; color:var(--text-mid); font-size:13.5px; line-height:1.5;}
+  textarea{
+    width:100%; min-height:260px; resize:vertical; border-radius:var(--radius-sm);
+    border:1.6px solid var(--border-soft); padding:16px; font-family:'Outfit'; font-size:13.5px; line-height:1.6;
+    color:var(--text-deep); outline:none; transition:.2s; background:var(--pink-bg);
+  }
+  textarea:focus{border-color:var(--pink-deep); box-shadow:0 0 0 4px rgba(255,143,171,.14);}
+  textarea::placeholder{color:var(--text-mid); opacity:.65;}
+  .submit-actions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  .example-block{
+    background:var(--lilac); border-radius:var(--radius-sm); padding:16px 18px; font-size:12.5px;
+    line-height:1.7; color:var(--text-mid); font-family:'Outfit'; white-space:pre-wrap; margin-top:14px;
+  }
+  .example-block b{color:var(--purple-deep);}
+  .preview-list{display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; padding-right:4px;}
+  .preview-item{
+    background:var(--pink-bg); border-radius:var(--radius-sm); padding:12px 14px; font-size:13px;
+    border-left:4px solid var(--pink-deep); animation:rowIn .4s ease both;
+  }
+  .preview-item .pn{font-weight:700; color:var(--text-deep);}
+  .preview-item .pd{color:var(--text-mid); font-size:12px; margin-top:2px;}
+  .badge-count{
+    display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px;
+    background:var(--pink-deep); color:#fff; border-radius:999px; font-size:11.5px; font-weight:700; padding:0 7px;
+  }
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(120%);
+    background:var(--text-deep); color:var(--bg-1); padding:14px 24px; border-radius:999px;
+    font-weight:700; font-size:14px; box-shadow:0 14px 30px rgba(0,0,0,.3); z-index:200;
+    transition:transform .4s cubic-bezier(.34,1.56,.64,1); display:flex; align-items:center; gap:10px;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0);}
+  #toast .dot{width:9px; height:9px; border-radius:50%; background:var(--green-soft); flex-shrink:0;}
+  #toast.err .dot{background:var(--red-soft);}
+
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--scrollbar); border-radius:10px;}
+
+  footer{text-align:center; padding:24px; color:var(--text-mid); font-size:12.5px;}
+
+  .sun-moon{transition:transform .4s ease;}
+  .icon-btn:active .sun-moon{transform:rotate(25deg);}
+</style>
+</head>
+<body>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<header>
+  <div class="logo" onclick="goPage('welcome')">
+    <span class="cloud-mini">☁️</span> Meghla
+  </div>
+
+  <div class="header-right">
+    <nav class="tabs">
+      <button data-page="list" onclick="goPage('list')">📋 Appointment List</button>
+      <button data-page="submit" onclick="goPage('submit')">✍️ Appointment Submit</button>
+    </nav>
+
+    <div class="dropdown-wrap">
+      <button class="icon-btn" id="bellBtn" onclick="toggleNotifPanel()" title="Notifications">
+        🔔
+        <span class="badge-dot" id="notifBadge" style="display:none;">0</span>
+      </button>
+      <div class="dropdown-panel" id="notifPanel">
+        <div class="dropdown-head">
+          <h4>Notifications</h4>
+          <button onclick="goPage('list'); closeNotifPanel();">View all</button>
+        </div>
+        <div id="notifList"></div>
+        <button class="notif-cta" id="enableNotifBtn" onclick="enableBrowserNotifications()">🔔 Enable desktop alerts</button>
+      </div>
+    </div>
+
+    <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark / light mode">
+      <span class="sun-moon" id="themeIcon">🌙</span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= WELCOME PAGE ================= -->
+  <section class="page" id="page-welcome">
+    <div class="welcome-hero">
+      <div class="mascot-wrap">
+        <span class="sparkle s1">✨</span>
+        <span class="sparkle s2">💫</span>
+        <span class="sparkle s3">⭐</span>
+        <span class="sparkle s4">✨</span>
+        <svg class="mascot" viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="110" cy="150" rx="70" ry="10" fill="#ffd3e2" opacity="0.35"/>
+          <path d="M40 110c-22 0-30-24-12-34 2-20 24-32 42-22 10-16 40-18 52-2 22-4 40 14 32 34 14 6 12 30-6 32H50c-14 0-18-6-10-8z" fill="url(#cg)"/>
+          <defs>
+            <linearGradient id="cg" x1="0" y1="0" x2="220" y2="180">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#ffe1ec"/>
+            </linearGradient>
+          </defs>
+          <circle cx="88" cy="92" r="6" fill="#4a2e4f"/>
+          <circle cx="132" cy="92" r="6" fill="#4a2e4f"/>
+          <path d="M92 108q18 14 36 0" stroke="#4a2e4f" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle cx="72" cy="102" r="7" fill="#ffb6c9" opacity=".8"/>
+          <circle cx="150" cy="102" r="7" fill="#ffb6c9" opacity=".8"/>
+        </svg>
+      </div>
+      <h1>Hi, I'm <span>Meghla</span>! ☁️</h1>
+      <p class="tagline">I'll take care of your appointments — name, number, date, and time, all neatly organized in one place. Just sit back and let me handle it. 💕</p>
+      <p class="sub">Minimizing your work, one appointment at a time</p>
+
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="goPage('list')">📋 View Appointments</button>
+        <button class="btn btn-ghost" onclick="goPage('submit')">✍️ Add New Appointment</button>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="emoji">📥</span>
+        <h3>Paste &amp; Done</h3>
+        <p>Paste the booking text you receive from Messenger directly — add multiple appointments at once, instantly organized.</p>
+      </div>
+      <div class="feature-card">
+        <span class="emoji">🗓️</span>
+        <h3>Never Miss a Date</h3>
+        <p>Appointments that are overdue and still unapproved are automatically flagged in red, so nothing slips through.</p>
+      </div>
+      <div class="feature-card">
+        <span class="emoji">✅</span>
+        <h3>One-Tap Approve</h3>
+        <p>Approve or decline in a single click — green means confirmed, red means declined. Simple as that.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LIST PAGE ================= -->
+  <section class="page" id="page-list">
+    <div class="section-head">
+      <div>
+        <h2>Appointment List</h2>
+        <p>Every booking, organized and always up to date.</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">TOTAL BOOKINGS</div></div>
+      <div class="stat-card amber"><div class="num" id="statPending">0</div><div class="lbl">PENDING REVIEW</div></div>
+      <div class="stat-card green"><div class="num" id="statApproved">0</div><div class="lbl">APPROVED</div></div>
+      <div class="stat-card red"><div class="num" id="statOverdue">0</div><div class="lbl">OVERDUE</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="Search by name or phone..." oninput="renderTable()">
+      </div>
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-chip" data-filter="pending" onclick="setFilter('pending')">Pending</button>
+      <button class="filter-chip" data-filter="yes" onclick="setFilter('yes')">Approved</button>
+      <button class="filter-chip" data-filter="no" onclick="setFilter('no')">Rejected</button>
+      <button class="filter-chip" data-filter="overdue" onclick="setFilter('overdue')">Overdue</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Phone</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Profile</th>
+            <th>Approve</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <span class="emoji">🌸</span>
+        <h3>No appointments yet</h3>
+        <p>Head to the Appointment Submit page and paste your first booking text to get started.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SUBMIT PAGE ================= -->
+  <section class="page" id="page-submit">
+    <div class="section-head">
+      <div>
+        <h2>Appointment Submit</h2>
+        <p>Paste booking text received from Messenger AI — multiple entries at once are fully supported.</p>
+      </div>
+    </div>
+
+    <div class="submit-grid">
+      <div class="card">
+        <h3>📥 Paste Booking Text</h3>
+        <p class="hint">Paste one or more appointment texts into the box below, then click "Add Appointments" to save them.</p>
+        <textarea id="rawInput" placeholder="🔔 New Appointment Booked! (via Messenger AI)
+Name: Ritu Akther
+Phone: 01831975425
+Date: 2026-07-20
+Time: 14:00
+Type: Office Consultation
+User Profile: https://facebook.com/27697456743248757"></textarea>
+        <div class="submit-actions">
+          <button class="btn btn-primary" onclick="handleParse()">✨ Add Appointments</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('rawInput').value=''">🧹 Clear</button>
+        </div>
+        <div class="example-block">
+<b>Supported format:</b>
+🔔 New Appointment Booked! (via Messenger AI)
+Name: ...
+Phone: ...
+Date: YYYY-MM-DD
+Time: HH:MM
+Type: ...
+User Profile: https://...
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🌟 Recently Added <span class="badge-count" id="justAddedCount">0</span></h3>
+        <p class="hint">Your most recently added entries will appear here.</p>
+        <div class="preview-list" id="previewList">
+          <div class="empty-state" style="padding:30px 10px;">
+            <span class="emoji" style="font-size:32px;">🕊️</span>
+            <p style="font-size:13px; margin:0;">Nothing added yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Made with 💗 for effortless appointment tracking · Meghla</footer>
+
+<div id="toast"><span class="dot"></span><span id="toastMsg">Saved!</span></div>
+
+<script>
+let appointments = [];
+let currentFilter = 'all';
+let notifiedKeys = new Set();
+
+const PAGES = ['welcome','list','submit'];
+
+/* ---------------- Navigation ---------------- */
+function goPage(p){
+  PAGES.forEach(pg=>{
+    document.getElementById('page-'+pg).classList.toggle('active', pg===p);
+  });
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.page===p);
+  });
+  if(p==='list') renderTable();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function uid(){ return 'apt_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+
+function showToast(msg, isErr){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=> t.classList.remove('show'), 2800);
+}
+
+/* ---------------- Theme ---------------- */
+async function toggleTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  applyTheme(next);
+  try{ await window.storage.set('meghla_theme', next, false); }catch(e){}
+}
+
+function applyTheme(mode){
+  document.documentElement.setAttribute('data-theme', mode);
+  document.getElementById('themeIcon').textContent = mode === 'dark' ? '☀️' : '🌙';
+}
+
+async function loadTheme(){
+  try{
+    const res = await window.storage.get('meghla_theme', false);
+    applyTheme(res && res.value ? res.value : 'light');
+  }catch(e){
+    applyTheme('light');
+  }
+}
+
+/* ---------------- Storage: appointments ---------------- */
+async function loadData(){
+  try{
+    const res = await window.storage.get('meghla_appointments', false);
+    appointments = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    appointments = [];
+  }
+  renderTable();
+  refreshNotifications();
+}
+
+async function saveData(){
+  try{
+    await window.storage.set('meghla_appointments', JSON.stringify(appointments), false);
+  }catch(e){
+    showToast('⚠️ Could not save data — please try again', true);
+  }
+}
+
+/* ---------------- Parsing ---------------- */
+function parseBlocks(raw){
+  if(!raw || !raw.trim()) return [];
+  let blocks = raw.split(/(?=🔔)/g).map(b=>b.trim()).filter(Boolean);
+  if(blocks.length <= 1){
+    blocks = raw.split(/(?=Name\s*:)/i).map(b=>b.trim()).filter(Boolean);
+  }
+  const results = [];
+  blocks.forEach(block=>{
+    const get = (label) => {
+      const re = new RegExp(label + '\\s*:\\s*(.+)', 'i');
+      const m = block.match(re);
+      return m ? m[1].trim() : '';
+    };
+    const name = get('Name');
+    const phone = get('Phone');
+    const date = get('Date');
+    const time = get('Time');
+    const type = get('Type');
+    const profile = get('User Profile');
+    if(name || phone || date){
+      results.push({
+        id: uid(),
+        name: name || 'Unknown',
+        phone: phone || '—',
+        date: date || '',
+        time: time || '',
+        type: type || 'General',
+        profile: profile || '',
+        approve: null,
+        addedAt: Date.now()
+      });
+    }
+  });
+  return results;
+}
+
+async function handleParse(){
+  const raw = document.getElementById('rawInput').value;
+  const parsed = parseBlocks(raw);
+  if(parsed.length === 0){
+    showToast('⚠️ No valid appointment text found', true);
+    return;
+  }
+  appointments = [...parsed, ...appointments];
+  await saveData();
+  document.getElementById('rawInput').value = '';
+  renderPreview(parsed);
+  showToast(`✅ ${parsed.length} appointment${parsed.length>1?'s':''} added successfully!`);
+  renderTable();
+  refreshNotifications();
+}
+
+function renderPreview(items){
+  const wrap = document.getElementById('previewList');
+  document.getElementById('justAddedCount').textContent = items.length;
+  wrap.innerHTML = items.map(it => `
+    <div class="preview-item">
+      <div class="pn">${escapeHtml(it.name)}</div>
+      <div class="pd">📞 ${escapeHtml(it.phone)} &nbsp;·&nbsp; 🗓️ ${escapeHtml(it.date)} ${it.time?('· ⏰ '+escapeHtml(it.time)):''}</div>
+      <div class="pd">${escapeHtml(it.type)}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- Table rendering ---------------- */
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function dateStatus(dateStr){
+  if(!dateStr) return 'none';
+  const today = todayStr();
+  if(dateStr < today) return 'past';
+  if(dateStr === today) return 'today';
+  return 'future';
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  if(isNaN(d)) return dateStr;
+  return d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+function formatTime(t){
+  if(!t) return '';
+  const m = t.match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return t;
+  let h = parseInt(m[1],10);
+  const min = m[2];
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if(h===0) h = 12;
+  return `${h}:${min} ${ap}`;
+}
+
+function setFilter(f){
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
+  renderTable();
+}
+
+async function setApprove(id, val){
+  const item = appointments.find(a=>a.id===id);
+  if(!item) return;
+  item.approve = (item.approve === val) ? null : val;
+  await saveData();
+  renderTable();
+  refreshNotifications();
+}
+
+async function deleteApt(id){
+  appointments = appointments.filter(a=>a.id!==id);
+  await saveData();
+  renderTable();
+  refreshNotifications();
+  showToast('🗑️ Appointment removed');
+}
+
+function renderTable(){
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+
+  let list = [...appointments];
+
+  if(search){
+    list = list.filter(a =>
+      a.name.toLowerCase().includes(search) || a.phone.toLowerCase().includes(search)
+    );
+  }
+
+  if(currentFilter === 'pending') list = list.filter(a=>a.approve===null);
+  if(currentFilter === 'yes') list = list.filter(a=>a.approve==='yes');
+  if(currentFilter === 'no') list = list.filter(a=>a.approve==='no');
+  if(currentFilter === 'overdue') list = list.filter(a=> dateStatus(a.date)==='past' && a.approve!=='yes');
+
+  list.sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.time||'').localeCompare(b.time||''));
+
+  document.getElementById('statTotal').textContent = appointments.length;
+  document.getElementById('statPending').textContent = appointments.filter(a=>a.approve===null).length;
+  document.getElementById('statApproved').textContent = appointments.filter(a=>a.approve==='yes').length;
+  document.getElementById('statOverdue').textContent = appointments.filter(a=> dateStatus(a.date)==='past' && a.approve!=='yes').length;
+
+  if(list.length === 0){
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  body.innerHTML = list.map((a, idx) => {
+    const st = dateStatus(a.date);
+    const overdue = st === 'past' && a.approve !== 'yes';
+    const badgeClass = st === 'past' ? 'past' : (st === 'today' ? 'today' : '');
+    return `
+      <tr class="${overdue ? 'overdue' : ''}" style="animation-delay:${idx*0.03}s">
+        <td>
+          <div class="name-cell">
+            <span class="nm">${escapeHtml(a.name)}</span>
+            <span class="type-tag">${escapeHtml(a.type)}</span>
+          </div>
+        </td>
+        <td>${escapeHtml(a.phone)}</td>
+        <td><span class="date-badge ${badgeClass}">🗓️ ${formatDate(a.date)}</span></td>
+        <td>${a.time ? '⏰ ' + escapeHtml(formatTime(a.time)) : '—'}</td>
+        <td>${a.profile ? `<a class="profile-link" href="${escapeHtml(a.profile)}" target="_blank" rel="noopener" title="View profile">🔗</a>` : '—'}</td>
+        <td>
+          <div class="approve-group">
+            <button class="approve-btn yes ${a.approve==='yes'?'on':''}" onclick="setApprove('${a.id}','yes')">Yes</button>
+            <button class="approve-btn no ${a.approve==='no'?'on':''}" onclick="setApprove('${a.id}','no')">No</button>
+          </div>
+        </td>
+        <td><button class="del-btn" onclick="deleteApt('${a.id}')" title="Delete">✕</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ---------------- Notifications ---------------- */
+function buildNotificationList(){
+  const items = [];
+  appointments.forEach(a=>{
+    const st = dateStatus(a.date);
+    if(st === 'past' && a.approve !== 'yes'){
+      items.push({
+        key: a.id+'-overdue', icon:'⚠️',
+        title: `${a.name}'s appointment is overdue`,
+        sub: `${formatDate(a.date)} · still awaiting approval`
+      });
+    }else if(st === 'today'){
+      items.push({
+        key: a.id+'-today', icon:'📅',
+        title: `${a.name} has an appointment today`,
+        sub: a.time ? `at ${formatTime(a.time)}` : 'Time not specified'
+      });
+    }
+  });
+  return items;
+}
+
+function refreshNotifications(){
+  const items = buildNotificationList();
+  const badge = document.getElementById('notifBadge');
+  const list = document.getElementById('notifList');
+
+  if(items.length === 0){
+    badge.style.display = 'none';
+    list.innerHTML = '<div class="notif-empty">🎉 You are all caught up — no urgent appointments.</div>';
+  }else{
+    badge.style.display = 'flex';
+    badge.textContent = items.length > 9 ? '9+' : items.length;
+    list.innerHTML = items.map(it => `
+      <div class="notif-item" onclick="goPage('list'); closeNotifPanel();">
+        <span class="ni-icon">${it.icon}</span>
+        <div>
+          <div class="ni-title">${escapeHtml(it.title)}</div>
+          <div class="ni-sub">${escapeHtml(it.sub)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  maybeFireBrowserNotifications(items);
+}
+
+function toggleNotifPanel(){
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+function closeNotifPanel(){
+  document.getElementById('notifPanel').classList.remove('open');
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.dropdown-wrap');
+  if(wrap && !wrap.contains(e.target)){
+    closeNotifPanel();
+  }
+});
+
+function enableBrowserNotifications(){
+  if(typeof Notification === 'undefined'){
+    showToast('⚠️ Desktop alerts are not supported in this browser', true);
+    return;
+  }
+  Notification.requestPermission().then(perm=>{
+    if(perm === 'granted'){
+      showToast('🔔 Desktop alerts enabled!');
+      maybeFireBrowserNotifications(buildNotificationList(), true);
+    }else{
+      showToast('⚠️ Permission was not granted', true);
+    }
+  }).catch(()=>{
+    showToast('⚠️ Could not enable desktop alerts here', true);
+  });
+}
+
+function maybeFireBrowserNotifications(items, force){
+  if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  items.forEach(it=>{
+    if(force || !notifiedKeys.has(it.key)){
+      try{
+        new Notification('Meghla · Appointment Alert', {
+          body: it.title + ' — ' + it.sub,
+          icon: '',
+          tag: it.key
+        });
+      }catch(e){}
+      notifiedKeys.add(it.key);
+    }
+  });
+}
+
+/* ---------------- Init ---------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  goPage('welcome');
+  loadTheme();
+  loadData();
+});
+</script>
+</body>
+</html>
