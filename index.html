@@ -274,6 +274,12 @@
     font-size:15px; transition:.2s;
   }
   .profile-link:hover{background:var(--pink-deep); color:#fff; transform:scale(1.08);}
+  .phone-link{
+    display:inline-flex; align-items:center; gap:6px; color:var(--text-deep); text-decoration:none;
+    font-weight:700; padding:6px 10px; border-radius:999px; background:var(--pink-bg); transition:.2s;
+  }
+  .phone-link:hover{background:var(--pink-deep); color:#fff; transform:translateY(-1px);}
+  .phone-link .call-ico{font-size:13px;}
   .approve-group{display:flex; gap:6px;}
   .approve-btn{
     border:none; cursor:pointer; padding:7px 13px; border-radius:999px; font-weight:700; font-size:12.5px;
@@ -382,29 +388,11 @@
   }
 
   @media (max-width: 620px){
-    /* Card-style table for small screens */
-    .table-wrap{background:transparent; box-shadow:none; border:none; overflow:visible;}
-    table, thead, tbody, tr, td{display:block; width:100%;}
-    thead{display:none;}
-    tbody tr{
-      background:var(--surface); border-radius:var(--radius-md); box-shadow:var(--shadow-soft);
-      border:1px solid var(--border-soft); margin-bottom:12px; padding:6px 4px; border-left:5px solid var(--pink-deep);
-    }
-    tbody tr.overdue{border-left-color:var(--red-soft); background:linear-gradient(135deg, var(--red-bg), var(--surface));}
-    tbody tr:not(:last-child){border-bottom:1px solid var(--border-soft);}
-    tbody td{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      padding:10px 14px; border-bottom:1px dashed var(--border-soft); text-align:right;
-    }
-    tbody td:last-child{border-bottom:none;}
-    tbody td::before{
-      content:attr(data-label); font-weight:700; font-size:11.5px; letter-spacing:.3px;
-      text-transform:uppercase; color:var(--text-mid); text-align:left; flex-shrink:0;
-    }
-    tbody td[data-label=""]{justify-content:flex-end;}
-    tbody td[data-label=""]::before{content:none;}
-    .name-cell{align-items:flex-end;}
-    .approve-group{justify-content:flex-end;}
+    /* Keep a real table on mobile, but let it scroll horizontally */
+    .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+    table{min-width:640px;}
+    thead th{padding:12px 10px; font-size:11px;}
+    tbody td{padding:12px 10px; font-size:13px;}
   }
 
   @media (max-width: 420px){
@@ -787,6 +775,12 @@ function formatTime(t){
   return `${h}:${min} ${ap}`;
 }
 
+function telHref(phone){
+  if(!phone) return '';
+  const cleaned = phone.trim().replace(/[^\d+]/g, '');
+  return cleaned ? 'tel:' + cleaned : '';
+}
+
 function setFilter(f){
   currentFilter = f;
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.filter===f));
@@ -854,7 +848,7 @@ function renderTable(){
             <span class="type-tag">${escapeHtml(a.type)}</span>
           </div>
         </td>
-        <td data-label="Phone">${escapeHtml(a.phone)}</td>
+        <td data-label="Phone">${a.phone && a.phone !== '—' ? `<a class="phone-link" href="${telHref(a.phone)}" title="Call ${escapeHtml(a.phone)}"><span class="call-ico">📞</span>${escapeHtml(a.phone)}</a>` : '—'}</td>
         <td data-label="Date"><span class="date-badge ${badgeClass}">🗓️ ${formatDate(a.date)}</span></td>
         <td data-label="Time">${a.time ? '⏰ ' + escapeHtml(formatTime(a.time)) : '—'}</td>
         <td data-label="Profile">${a.profile ? `<a class="profile-link" href="${escapeHtml(a.profile)}" target="_blank" rel="noopener" title="View profile">🔗</a>` : '—'}</td>
