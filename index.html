@@ -609,6 +609,27 @@ let notifiedKeys = new Set();
 
 const PAGES = ['welcome','list','submit'];
 
+/* ---------------- Local storage helpers (standalone-file safe) ---------------- */
+const LS_APPTS_KEY = 'meghla_appointments_v1';
+const LS_THEME_KEY = 'meghla_theme_v1';
+
+function lsGet(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw === null ? null : raw;
+  }catch(e){
+    return null;
+  }
+}
+function lsSet(key, value){
+  try{
+    localStorage.setItem(key, value);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 /* ---------------- Navigation ---------------- */
 function goPage(p){
   PAGES.forEach(pg=>{
@@ -633,11 +654,11 @@ function showToast(msg, isErr){
 }
 
 /* ---------------- Theme ---------------- */
-async function toggleTheme(){
+function toggleTheme(){
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const next = isDark ? 'light' : 'dark';
   applyTheme(next);
-  try{ await window.storage.set('meghla_theme', next, false); }catch(e){}
+  lsSet(LS_THEME_KEY, next);
 }
 
 function applyTheme(mode){
@@ -645,20 +666,16 @@ function applyTheme(mode){
   document.getElementById('themeIcon').textContent = mode === 'dark' ? '☀️' : '🌙';
 }
 
-async function loadTheme(){
-  try{
-    const res = await window.storage.get('meghla_theme', false);
-    applyTheme(res && res.value ? res.value : 'light');
-  }catch(e){
-    applyTheme('light');
-  }
+function loadTheme(){
+  const saved = lsGet(LS_THEME_KEY);
+  applyTheme(saved || 'light');
 }
 
 /* ---------------- Storage: appointments ---------------- */
-async function loadData(){
+function loadData(){
+  const raw = lsGet(LS_APPTS_KEY);
   try{
-    const res = await window.storage.get('meghla_appointments', false);
-    appointments = res && res.value ? JSON.parse(res.value) : [];
+    appointments = raw ? JSON.parse(raw) : [];
   }catch(e){
     appointments = [];
   }
@@ -666,10 +683,9 @@ async function loadData(){
   refreshNotifications();
 }
 
-async function saveData(){
-  try{
-    await window.storage.set('meghla_appointments', JSON.stringify(appointments), false);
-  }catch(e){
+function saveData(){
+  const ok = lsSet(LS_APPTS_KEY, JSON.stringify(appointments));
+  if(!ok){
     showToast('⚠️ Could not save data — please try again', true);
   }
 }
@@ -711,7 +727,7 @@ function parseBlocks(raw){
   return results;
 }
 
-async function handleParse(){
+function handleParse(){
   const raw = document.getElementById('rawInput').value;
   const parsed = parseBlocks(raw);
   if(parsed.length === 0){
@@ -719,7 +735,7 @@ async function handleParse(){
     return;
   }
   appointments = [...parsed, ...appointments];
-  await saveData();
+  saveData();
   document.getElementById('rawInput').value = '';
   renderPreview(parsed);
   showToast(`✅ ${parsed.length} appointment${parsed.length>1?'s':''} added successfully!`);
@@ -787,18 +803,18 @@ function setFilter(f){
   renderTable();
 }
 
-async function setApprove(id, val){
+function setApprove(id, val){
   const item = appointments.find(a=>a.id===id);
   if(!item) return;
   item.approve = (item.approve === val) ? null : val;
-  await saveData();
+  saveData();
   renderTable();
   refreshNotifications();
 }
 
-async function deleteApt(id){
+function deleteApt(id){
   appointments = appointments.filter(a=>a.id!==id);
-  await saveData();
+  saveData();
   renderTable();
   refreshNotifications();
   showToast('🗑️ Appointment removed');
