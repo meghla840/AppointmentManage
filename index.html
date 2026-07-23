@@ -820,6 +820,17 @@ function deleteApt(id){
   showToast('🗑️ Appointment removed');
 }
 
+/* Sorting priority: today's appointments first, then upcoming (future) dates
+   in ascending order, and finally overdue (past, not-yet-approved-as-done)
+   appointments pushed down to the bottom. Entries without a date go last. */
+function sortRank(a){
+  const st = dateStatus(a.date);
+  if(st === 'today') return 0;
+  if(st === 'future') return 1;
+  if(st === 'past') return 2;
+  return 3; // no date
+}
+
 function renderTable(){
   const body = document.getElementById('tableBody');
   const empty = document.getElementById('emptyState');
@@ -838,7 +849,11 @@ function renderTable(){
   if(currentFilter === 'no') list = list.filter(a=>a.approve==='no');
   if(currentFilter === 'overdue') list = list.filter(a=> dateStatus(a.date)==='past' && a.approve!=='yes');
 
-  list.sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.time||'').localeCompare(b.time||''));
+  list.sort((a,b)=>{
+    const ra = sortRank(a), rb = sortRank(b);
+    if(ra !== rb) return ra - rb;
+    return (a.date||'').localeCompare(b.date||'') || (a.time||'').localeCompare(b.time||'');
+  });
 
   document.getElementById('statTotal').textContent = appointments.length;
   document.getElementById('statPending').textContent = appointments.filter(a=>a.approve===null).length;
